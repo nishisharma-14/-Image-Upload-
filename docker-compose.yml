@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  app1:
+    build: .
+    environment:
+      PORT: "3001"
+      INSTANCE_ID: "instance-1"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+    ports:
+      - "3001:3001"
+
+  app2:
+    build: .
+    environment:
+      PORT: "3002"
+      INSTANCE_ID: "instance-2"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+    ports:
+      - "3002:3002"
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.docker.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app1
+      - app2
