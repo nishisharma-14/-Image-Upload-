@@ -1,0 +1,56 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: fake-key-id
+      AWS_SECRET_ACCESS_KEY: fake-secret-key
+      AWS_REGION: us-east-1
+      S3_BUCKET_NAME: test-bucket
+      PORT: 3001
+      INSTANCE_ID: ci-instance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm test
+
+  build:
+    name: Startup Check
+    runs-on: ubuntu-latest
+    needs: test
+    env:
+      AWS_ACCESS_KEY_ID: fake-key-id
+      AWS_SECRET_ACCESS_KEY: fake-secret-key
+      AWS_REGION: us-east-1
+      S3_BUCKET_NAME: test-bucket
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - name: Check instance 1 starts
+        run: |
+          PORT=3001 INSTANCE_ID=instance-1 node src/server.js &
+          sleep 3
+          curl -f http://localhost:3001/health
+          kill %1
+      - name: Check instance 2 starts
+        run: |
+          PORT=3002 INSTANCE_ID=instance-2 node src/server.js &
+          sleep 3
+          curl -f http://localhost:3002/health
+          kill %1
