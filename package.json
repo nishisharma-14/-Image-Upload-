@@ -9,16 +9,17 @@
     "start:3002": "PORT=3002 INSTANCE_ID=instance-2 node src/server.js",
     "test": "jest --forceExit --coverage",
     "lint": "eslint src/ tests/"
-},
-"jest": {
+  },
+  "jest": {
     "testEnvironment": "node"
-},
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1041.0",
+    "@aws-sdk/s3-request-presigner": "^3.1041.0",
     "express": "^5.2.1",
     "multer": "^2.1.1",
     "sharp": "^0.34.5",

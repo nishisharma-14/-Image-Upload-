@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { randomUUID: uuidv4 } = require("crypto");
 const sharp = require("sharp");
 const path = require("path");
@@ -65,8 +66,19 @@ app.post("/upload", upload.single("image"), async (req, res) => {
     }));
 
     const imageUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${uniqueKey}`;
-    console.log(`[${INSTANCE_ID}] Uploaded to S3: ${imageUrl}`);
-    return res.status(200).json({ url: imageUrl });
+
+const signedUrl = await getSignedUrl(
+  s3,
+  new GetObjectCommand({ Bucket: BUCKET_NAME, Key: uniqueKey }),
+  { expiresIn: 3600 }
+);
+
+console.log(`[${INSTANCE_ID}] Uploaded to S3: ${imageUrl}`);
+return res.status(200).json({ 
+  url: imageUrl,
+  signedUrl: signedUrl,
+  expiresIn: "1 hour"
+});
 
   } catch (err) {
     console.error(`[${INSTANCE_ID}] Upload error:`, err.message);
