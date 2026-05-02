@@ -3,8 +3,13 @@ jest.mock("@aws-sdk/client-s3", () => {
   return {
     S3Client: jest.fn().mockImplementation(() => ({ send: mockSend })),
     PutObjectCommand: jest.fn(),
+    GetObjectCommand: jest.fn(),
   };
 });
+
+jest.mock("@aws-sdk/s3-request-presigner", () => ({
+  getSignedUrl: jest.fn().mockResolvedValue("https://signed-url.example.com/test.png"),
+}));
 
 jest.mock("sharp", () => {
   return jest.fn(() => ({
@@ -63,11 +68,15 @@ describe("POST /upload", () => {
       .attach("image", fakePng(), { filename: "test.png", contentType: "image/png" });
     expect(res.status).toBe(200);
     expect(res.body.url).toMatch(/^https:\/\/test-bucket\.s3\.amazonaws\.com\/uploads\/.+\.png$/);
+    expect(res.body).toHaveProperty("signedUrl");
+    expect(res.body.expiresIn).toBe("1 hour");
   });
 
   it("two uploads produce unique URLs", async () => {
     const r1 = await request(app).post("/upload").attach("image", fakePng(), { filename: "a.png", contentType: "image/png" });
     const r2 = await request(app).post("/upload").attach("image", fakePng(), { filename: "b.png", contentType: "image/png" });
     expect(r1.body.url).not.toBe(r2.body.url);
+    expect(r1.body).toHaveProperty("signedUrl");
+    expect(r2.body).toHaveProperty("signedUrl");
   });
 });
