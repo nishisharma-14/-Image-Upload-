@@ -199,3 +199,42 @@ Tests: 6 passed
 | NGINX | Load balancer |
 | Jest + Supertest | Testing |
 | GitHub Actions | CI pipeline |
+
+## 🐳 Docker Setup (Bonus)
+
+Run the entire stack with one command — no need to open multiple terminals.
+
+### Requirements
+- Docker installed on your machine
+
+### Run with Docker
+docker-compose up --build
+
+This starts:
+- `app1` → Node.js instance on port 3001
+- `app2` → Node.js instance on port 3002
+- `nginx` → Load balancer on port 80
+
+### Test it
+curl -X POST http://localhost/upload 
+-F "image=@/path/to/photo.jpg"
+
+### Stop everything
+docker-compose down
+
+---
+
+## 🔐 Signed S3 URLs
+
+Every upload returns two URLs:
+
+```json
+{
+  "url": "https://my-bucket.s3.amazonaws.com/uploads/123.jpg",
+  "signedUrl": "https://my-bucket.s3.amazonaws.com/uploads/123.jpg?X-Amz-Algorithm=...",
+  "expiresIn": "1 hour"
+}
+```
+
+- `url` → permanent public URL
+- `signedUrl` → temporary secure URL, expires in 1 hour
